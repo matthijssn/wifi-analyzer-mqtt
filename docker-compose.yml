@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  wifianalyzermqtt:
+    image: wifianalyzermqtt
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+      mqttHost: 'mqtt://host'
+      mqttTopic: 'topic/'
+      mqttUserName: ''
+      mqttPassword: ''
