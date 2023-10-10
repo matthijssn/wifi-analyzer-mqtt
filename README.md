@@ -1,7 +1,12 @@
 # WiFi Analyzer MQTT Docker Node.js Process
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/matthijssn/wifi-analyzer-mqtt.git)
+![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/matthijssn/wifi-analyzer-mqtt/main)
+
 [![DockerHub](https://img.shields.io/badge/DockerHub-Repository-blue.svg)](https://hub.docker.com/r/matthijssn/wifi-analyzer-mqtt)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/matthijssn/wifi-analyzer-mqtt)
+
+
 
 ## Overview
 
