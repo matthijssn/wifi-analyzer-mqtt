@@ -29,14 +29,17 @@ class WifiAnalysisToMqtt {
     }
 
     async start() {
+        console.log('Start scanning...');
         while (true) {
             scanner.scan(async (err, networks) => {
                 if (err) {
                     console.error(err);
                     return;
                 }
+                console.log('Found networks:');
                 console.log(networks);
-
+                
+                console.log('Publish networks');
                 networks.forEach(_publishNetwork);
 
                 console.log('Sleep.....');
@@ -53,7 +56,7 @@ class WifiAnalysisToMqtt {
             json_attributes_topic: `${network.mac}/attributes`,  
             icon: 'mdi:wifi',
         };
-                                
+        console.log(`Publish discovery topic for ${network.mac} `);                          
         await this._client.publish(this.topic + `${network.mac}/config`,JSON.stringify(this.autodiscoveryPayload, { qos: 0, retain: true}, (err)=> {
         if (err) {
             console.error('Error publishing Autodiscovery message:', err);
@@ -62,6 +65,7 @@ class WifiAnalysisToMqtt {
             }
         }) );
         
+        console.log(`Publish attributes topic for ${network.mac} `);      
         await this._client.publish(this.topic + `${network.mac}/attributes`, JSON.stringify(network), { qos: 1, retain: false}, (err)=> {
             if (err) {
                 console.error('Error publishing network message:', err);
