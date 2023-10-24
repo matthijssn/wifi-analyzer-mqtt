@@ -1,6 +1,6 @@
 const WifiAnalysisToMqtt = require('./src/WifiAnalysisToMqtt');
 
-const mqttTopic = process.env.mqttTopic //'homeassistant/wifi-analyzer'
+const mqttPrefix = process.env.mqttPrefix //'homeassistant'
 const mqttHost =  process.env.mqttHost //'eg. mqtt://broker.hivemq.com'
 const mqttOptions = {
     username: process.env.mqttUserName,
@@ -10,7 +10,7 @@ const mqttOptions = {
 const seconds = process.env.seconds;
 
 async function start() {
-    let wm = new WifiAnalysisToMqtt(mqttHost, mqttTopic, mqttOptions, seconds);
+    let wm = new WifiAnalysisToMqtt(mqttHost, mqttPrefix, mqttOptions, seconds);
 
     await wm.connect();
 

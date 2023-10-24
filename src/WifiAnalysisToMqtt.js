@@ -1,11 +1,16 @@
 const mqtt = require('mqtt');
 const scanner = require('node-wifi-scanner');
 
+const topic = `${this.mqttPrefix}/device_tracker/wifianalyzermqtt`; 
+
+
+
+
 class WifiAnalysisToMqtt {
 
-    constructor(mqttHost, mqttTopic, mqttOptions, seconds) {
+    constructor(mqttHost, mqttPrefix, mqttOptions, seconds) {
         this.mqttHost = mqttHost;
-        this.mqttTopic = mqttTopic;
+        this.mqttPrefix = mqttPrefix;
         this.mqttOptions = mqttOptions;
         this.seconds = seconds;
 
@@ -24,6 +29,10 @@ class WifiAnalysisToMqtt {
     }
 
     async start() {
+        //config      
+      
+     
+
         while (true) {
             scanner.scan(async (err, networks) => {
                 if (err) {
@@ -31,13 +40,39 @@ class WifiAnalysisToMqtt {
                     return;
                 }
                 console.log(networks);
-                await this._client.publish(this.mqttTopic, JSON.stringify(networks));
-            });
-            
 
-            console.log('Sleep.....');
-            await this._delay(this.seconds * 1000);
+                networks.forEach(_publishNetwork);
+
+                console.log('Sleep.....');
+                await this._delay(this.seconds * 1000);
+            });
         }
+    }
+
+    async _publishNetwork(network) {      
+        // Define the JSON payload for Autodiscovery
+        const autodiscoveryPayload = {
+            name: 'WifiAnalyzerMQTT',
+            uniq_id: 'wifi-analyzer-mqtt',  
+            json_attributes_topic: `${network.mac}/attributes`,  
+            icon: 'mdi:wifi',
+        };
+                                
+        await this._client.publish(this.topic + `${network.mac}/config`,JSON.stringify(this.autodiscoveryPayload, { qos: 0, retain: true}, (err)=> {
+        if (err) {
+            console.error('Error publishing Autodiscovery message:', err);
+            } else {
+            console.log('Autodiscovery message published successfully');
+            }
+        }) );
+        
+        await this._client.publish(this.topic + `${network.mac}/attributes`, JSON.stringify(network), { qos: 1, retain: false}, (err)=> {
+            if (err) {
+                console.error('Error publishing network message:', err);
+            } else {
+                console.log('Network message published successfully');
+            }
+        });
     }
 
     async _setupConnection(mqttHost, options = {}) {
