@@ -29,10 +29,6 @@ class WifiAnalysisToMqtt {
     }
 
     async start() {
-        //config      
-      
-     
-
         while (true) {
             scanner.scan(async (err, networks) => {
                 if (err) {
