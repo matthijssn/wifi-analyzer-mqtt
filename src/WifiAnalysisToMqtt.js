@@ -36,11 +36,16 @@ class WifiAnalysisToMqtt {
                     console.error(err);
                     return;
                 }
-                console.log('Found networks:');
-                console.log(networks);
-                
-                console.log('Publish networks');
-                networks.forEach(_publishNetwork);
+
+                if(networks) {
+                    console.log('Found networks:');
+                    console.log(networks);
+                    
+                    console.log('Publish networks');
+                    networks.forEach(_publishNetwork);
+                } else {
+                    console.log('No networks found...');
+                }
 
                 console.log('Sleep.....');
                 await this._delay(this.seconds * 1000);
