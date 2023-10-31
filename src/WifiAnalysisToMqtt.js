@@ -1,8 +1,6 @@
 const mqtt = require('mqtt');
-const scanner = require('node-wifi-scanner');
 
-const topic = `${this.mqttPrefix}/device_tracker/wifianalyzermqtt`; 
-
+const wifiScanner = require('node-wifi');
 
 
 
@@ -23,55 +21,68 @@ class WifiAnalysisToMqtt {
     async connect() {
         await this._setupConnection(this.mqttHost, this.mqttOptions);
         while (!this._state.mqttConnected) {
-            console.log('Connecting to mqtt server...');
+            console.log(`Connecting to mqtt server ${this.mqttHost}...`);
             await this._delay(1000);
+            
         }
+
+       
     }
 
     async start() {
         console.log('Start scanning...');
-        while (true) {
-            scanner.scan(async (err, networks) => {
+        while (true) {  
+            console.log('Start scan interation...');  
+            wifiScanner.init({
+                iface: null
+            });     
+            wifiScanner.scan( async (err, networks) => {             
                 if (err) {
-                    console.error(err);
-                    return;
+                    console.error(err);                    
                 }
-
-                if(networks) {
-                    console.log('Found networks:');
-                    console.log(networks);
+                else {
+                    if(networks) {
+                        console.log('Found networks:');
+                        console.log(networks);
                     
-                    console.log('Publish networks');
-                    networks.forEach(_publishNetwork);
-                } else {
-                    console.log('No networks found...');
-                }
-
-                console.log('Sleep.....');
-                await this._delay(this.seconds * 1000);
+                        console.log('Publish networks');
+                        networks.forEach((network) => this._publishNetwork(network));
+                    } else {
+                        console.log('No networks found...');
+                    }
+                }                
             });
+            console.log('Sleep.....');
+            
+            await this._delay(this.seconds * 1000);
         }
     }
 
     async _publishNetwork(network) {      
+        // Disco topic
+        const discoTopic = `${this.mqttPrefix}/device_tracker/wifianalyzermqtt`; 
+        // Data topic
+        const dataTopic = `wifianalyzermqtt`; 
+        
         // Define the JSON payload for Autodiscovery
         const autodiscoveryPayload = {
-            name: 'WifiAnalyzerMQTT',
-            uniq_id: 'wifi-analyzer-mqtt',  
-            json_attributes_topic: `${network.mac}/attributes`,  
+            name: `WifiAnalyzerMQTT-${network.mac}`,
+            uniq_id: `wifi-analyzer-mqtt-${network.mac}`,  
+            json_attributes_topic: `${dataTopic}/${this.removeColonsFromMacAddress(network.mac)}/attributes`,  
+            source_type: 'router',
             icon: 'mdi:wifi',
         };
-        console.log(`Publish discovery topic for ${network.mac} `);                          
-        await this._client.publish(this.topic + `${network.mac}/config`,JSON.stringify(this.autodiscoveryPayload, { qos: 0, retain: true}, (err)=> {
+        console.log(`Publish discovery topic for ${discoTopic}/${this.removeColonsFromMacAddress(network.mac)}/config `);                          
+        await this._client.publish(`${discoTopic}/${this.removeColonsFromMacAddress(network.mac)}/config`,JSON.stringify(autodiscoveryPayload), { qos: 0, retain: true}, (err)=> {
         if (err) {
             console.error('Error publishing Autodiscovery message:', err);
             } else {
             console.log('Autodiscovery message published successfully');
             }
-        }) );
+        }) ;
         
-        console.log(`Publish attributes topic for ${network.mac} `);      
-        await this._client.publish(this.topic + `${network.mac}/attributes`, JSON.stringify(network), { qos: 1, retain: false}, (err)=> {
+        console.log(`Publish attributes topic for ${dataTopic}/${this.removeColonsFromMacAddress(network.mac)}/attributes`);      
+        await this._client.publish( `${dataTopic}/${this.removeColonsFromMacAddress(network.mac)}/attributes`, JSON.stringify(network), { qos: 0, retain: true}, (err)=> {
             if (err) {
                 console.error('Error publishing network message:', err);
             } else {
@@ -79,6 +90,11 @@ class WifiAnalysisToMqtt {
             }
         });
     }
+
+    removeColonsFromMacAddress(macAddress) {
+        // Use a regular expression to match and remove colons from the MAC address
+        return macAddress.replace(/:/g, '');
+      }
 
     async _setupConnection(mqttHost, options = {}) {
         try {

@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+  }
+
 const WifiAnalysisToMqtt = require('./src/WifiAnalysisToMqtt');
 
 const mqttPrefix = process.env.mqttPrefix //'homeassistant'
