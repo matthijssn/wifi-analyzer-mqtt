@@ -1,7 +1,7 @@
 FROM node:lts-alpine
 ENV NODE_ENV=production
 RUN apk add wireless-tools wpa_supplicant 
-RUN apk add --update networkmanager
+RUN apk add --update networkmanager-cli
 WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 RUN npm install --production --silent && mv node_modules ../
